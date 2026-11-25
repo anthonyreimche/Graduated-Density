@@ -725,9 +725,10 @@ vec3 gdFilter(vec3 rgb, vec2 uv, float aspect, float gdEv, float gdHard, float g
   float len = (sin(a) * (2.0 * uv.x - 1.0) - cos(a) * (2.0 * uv.y - 1.0) - 1.0 + gdShift / 100.0 * 2.0) * fh;
   vec3 tint = gdTint(gdHueDeg / 360.0, gdSatPct / 100.0);
   if (gdEv < 0.0) tint = 1.0 - tint;
+  float w = smoothstep(0.0, 1.0, 0.5 + len / 1.5);
   vec3 gain = gdEv > 0.0
-    ? 1.0 / (tint + (1.0 - tint) * exp2(gdEv * clamp(0.5 + len, 0.0, 1.0)))
-    : tint + (1.0 - tint) * exp2(-gdEv * clamp(0.5 - len, 0.0, 1.0));
+    ? 1.0 / (tint + (1.0 - tint) * exp2(gdEv * w))
+    : tint + (1.0 - tint) * exp2(-gdEv * (1.0 - w));
   if (gdSatPct == 0.0) return rgb * gain;
   const mat3 to2020 = ${Y(p)};
   const mat3 to709 = ${Y(h)};

@@ -49,6 +49,21 @@ describe("in a mask", () => {
     expect(rig.panels[0].mask).toEqual({ component: GraduatedPanel, owns: stageKeys(MASK_STAGE_ID) });
   });
 
+  it("edits the mask's tint through the field, not the photo's", () => {
+    const rig = setup();
+    const view = render(
+      <rig.MaskScope maskId="m1">
+        <GraduatedPanel />
+      </rig.MaskScope>,
+    );
+    const field = rig.colourFields(view.container)[0];
+    act(() => field.onChange({ hue: 90, saturation: 60 }));
+    act(() => field.onCommit?.());
+    expect(maskParams(rig, "m1")).toMatchObject({ on: true, hue: 90, saturation: 60 });
+    expect(readParams(rig.params(), STAGE_ID)).toMatchObject({ hue: 0, saturation: 0 });
+    expect(field.pick).toEqual({ paramBag: { [`${STAGE_ID}.on`]: false, [`${MASK_STAGE_ID}.on`]: false } });
+  });
+
   it("edits the mask's filter, not the photo's, and switches it on", () => {
     const rig = setup();
     const view = render(

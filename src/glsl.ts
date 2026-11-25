@@ -1,11 +1,12 @@
 // The filter per pixel, as model.ts filterPixel computes it: process()'s
-// length and density from graduatednd.c, the tint from colorspaces.h
-// hsl2rgb at half lightness. The position is the pixel's source UV, so the
-// filter stays on the same part of the photo through crop, straighten and
-// zoom, and lines up in the extra draw a later `reads: "current"` stage asks
-// for (which runs in source texels); uImageAspect is the uncropped photo's
-// width over its height. The host rewrites every whole word that matches a
-// uniform key, so the helpers' parameters are named apart from the keys.
+// length and density from graduatednd.c with the ramp eased (rampWeight), the
+// tint from colorspaces.h hsl2rgb at half lightness. The position is the
+// pixel's source UV, so the filter stays on the same part of the photo through
+// crop, straighten and zoom, and lines up in the extra draw a later
+// `reads: "current"` stage asks for (which runs in source texels);
+// uImageAspect is the uncropped photo's width over its height. The host
+// rewrites every whole word that matches a uniform key, so the helpers'
+// parameters are named apart from the keys.
 
 import { REC2020_TO_REC709, REC709_TO_REC2020 } from "./model";
 
@@ -39,9 +40,10 @@ vec3 gdFilter(vec3 rgb, vec2 uv, float aspect, float gdEv, float gdHard, float g
   float len = (sin(a) * (2.0 * uv.x - 1.0) - cos(a) * (2.0 * uv.y - 1.0) - 1.0 + gdShift / 100.0 * 2.0) * fh;
   vec3 tint = gdTint(gdHueDeg / 360.0, gdSatPct / 100.0);
   if (gdEv < 0.0) tint = 1.0 - tint;
+  float w = smoothstep(0.0, 1.0, 0.5 + len / 1.5);
   vec3 gain = gdEv > 0.0
-    ? 1.0 / (tint + (1.0 - tint) * exp2(gdEv * clamp(0.5 + len, 0.0, 1.0)))
-    : tint + (1.0 - tint) * exp2(-gdEv * clamp(0.5 - len, 0.0, 1.0));
+    ? 1.0 / (tint + (1.0 - tint) * exp2(gdEv * w))
+    : tint + (1.0 - tint) * exp2(-gdEv * (1.0 - w));
   if (gdSatPct == 0.0) return rgb * gain;
   const mat3 to2020 = ${glslMat3(REC709_TO_REC2020)};
   const mat3 to709 = ${glslMat3(REC2020_TO_REC709)};

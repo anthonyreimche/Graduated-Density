@@ -127,6 +127,15 @@ describe("GraduatedLine", () => {
     expect(rig.commits).toEqual(["Graduated Density: move line"]);
   });
 
+  it("moves the line by the pointer in layout px under Interface scale, as core's framePoint gives it", () => {
+    const { rig, part, params } = setup({ rotation: 20 });
+    rig.setFrameZoom(2);
+    press(part("line"), 800, 500, "pointerDown");
+    press(part("line"), 800, 580, "pointerMove");
+    press(part("line"), 800, 580, "pointerUp");
+    expect(params().offset).toBe(hundredth(50 + Math.cos((20 * Math.PI) / 180) * 10));
+  });
+
   it("puts the dense side on the drag's left: dragging the line's ends past each other flips it", () => {
     const { part, end, params } = setup();
     const a = end("a");

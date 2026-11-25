@@ -7,7 +7,7 @@ fading in across a line, the way a graduated filter in front of the lens holds
 back a bright sky. It can be neutral grey or tinted, soft or hard, and you
 place it by dragging its line on the photo.
 
-Needs Safelight 3.2.6 or later.
+Needs Safelight 3.2.7 or later.
 
 ## The controls
 
@@ -40,12 +40,18 @@ the line on the photo is that mask's.
 ## The math
 
 Faithful to `src/iop/graduatednd.c` (params version 1) and `hsl2rgb` from
-`src/common/colorspaces.h` at darktable `release-5.6.1`.
+`src/common/colorspaces.h` at darktable `release-5.6.1`, except for the ramp's
+shape.
 
 - A pixel's **length** is its distance across the line, scaled by the
   hardness and by the frame's diagonal. The density there is
-  2^(EV · clip(0.5 + length)): none on the clear side, the full EV on the
-  dense side.
+  2^(EV · ramp(length)): none on the clear side, the full EV on the dense
+  side.
+- darktable's ramp is clip(0.5 + length), straight in stops and stopping
+  dead at both ends. On a smooth sky those two corners show as bands on each
+  side of the line, sharper the harder the filter. Here the ramp is a
+  smoothstep across half again that span. It crosses the line at the same
+  place and the same slope, and eases in and out at the ends.
 - Each channel is divided by `tint + (1 − tint) · density`, where the tint is
   the hue and saturation at half lightness. Neutral grey is 0.5 on every
   channel, so a 1 EV filter divides the dense side by 1.5, as darktable does.
@@ -54,8 +60,9 @@ Faithful to `src/iop/graduatednd.c` (params version 1) and `hsl2rgb` from
 
 `test/reference/` holds the oracle. `npm run reference` copies those sections
 of darktable's C source into a harness, compiles it with gcc in float (as
-darktable runs) and in double, and writes `fixtures.json`. The extension's
-model matches the double build to 1e-12 and the float build to 1e-5. That
+darktable runs) and in double, and writes `fixtures.json`. Given darktable's
+own ramp, the extension's model matches the double build to 1e-12 and the
+float build to 1e-5. That
 covers every preset and the corners of each slider, the colour each setting
 commits, and the line's ends for 133 rotations and offsets.
 

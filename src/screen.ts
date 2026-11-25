@@ -1,6 +1,5 @@
 // The line's geometry on screen: where it is drawn inside the visible part of
-// the photo, the marks at its ends, and the pointer in the overlay's own
-// pixels.
+// the photo and the marks at its ends.
 
 import type { Point } from "./line";
 import type { OverlayRect } from "./safelight";
@@ -47,13 +46,4 @@ export function endMark(tip: Point, a: Point, b: Point, sign: 1 | -1, size: numb
   const uy = ((b.y - a.y) / l) * size;
   const p1 = { x: tip.x + sign * ux, y: tip.y + sign * uy };
   return [tip, p1, { x: (tip.x + p1.x) / 2 - uy, y: (tip.y + p1.y) / 2 + ux }];
-}
-
-/** A pointer's position in an element's layout pixels: client pixels less the
- *  element's corner, divided by the Interface-scale zoom the element is drawn
- *  at (its visual width over its layout width; 1 without zoom). */
-export function layoutPoint(clientX: number, clientY: number, el: HTMLElement): Point {
-  const r = el.getBoundingClientRect();
-  const zoom = el.offsetWidth > 0 && r.width > 0 ? r.width / el.offsetWidth : 1;
-  return { x: (clientX - r.left) / zoom, y: (clientY - r.top) / zoom };
 }

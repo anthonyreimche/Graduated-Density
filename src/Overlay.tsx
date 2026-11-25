@@ -19,7 +19,7 @@ import { gradFromPoints, offsetThrough, pointsFromGrad, type Point } from "./lin
 import { clampTo, hundredth, toDarktable, type Params } from "./model";
 import { ROTATE_CURSOR_ID } from "./cursor";
 import { React, api } from "./rt";
-import { clipLine, endMark, layoutPoint, within } from "./screen";
+import { clipLine, endMark, within } from "./screen";
 import type { OverlayRect } from "./safelight";
 import { store } from "./store";
 
@@ -144,7 +144,7 @@ export function GraduatedLine() {
 
   const pointerUv = (e: PointerEvent<Element>): Point | null => {
     if (!root.current) return null;
-    const at = layoutPoint(e.clientX, e.clientY, root.current);
+    const at = api.develop.framePoint(root.current, e.clientX, e.clientY);
     return toImage(at.x, at.y);
   };
 

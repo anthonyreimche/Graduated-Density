@@ -5,8 +5,11 @@
 //
 // The filter is a density ramp across a line. A pixel's place along the
 // line's normal, scaled by the hardness, is its `length`; the density there is
-// 2^(EV · clip(0.5 + length)), from none on the clear side to the full EV on
-// the dense side. With a positive EV each channel is divided by
+// 2^(EV · ramp(length)), from none on the clear side to the full EV on the
+// dense side. darktable's ramp is clip(0.5 + length), straight in stops, and
+// its corners at both ends band a smooth sky (#293); here it eases in and out
+// over half again that span, through the same line at the same slope. With a
+// positive EV each channel is divided by
 // colour + (1 − colour) · density, the colour being the filter's tint at half
 // lightness (neutral grey: 0.5 on every channel). A negative EV multiplies by
 // the same expression, with the tint inverted and the ramp reversed, which
@@ -126,6 +129,26 @@ export function hslToRgb(h: number, s: number, l: number): Rgb {
   ];
 }
 
+/** The tint as the filter takes it, for a swatch: hsl at half lightness,
+ *  display-encoded, `hue` in degrees and `saturation` in percent. A neutral
+ *  filter is the mid grey it multiplies by. */
+export function tintToRgb(hue: number, saturation: number): Rgb {
+  return hslToRgb(hue / 360, saturation / 100, 0.5);
+}
+
+/** The hue and saturation whose tint is nearest `rgb`: the colour's hue, and
+ *  its chroma as the share of the way from grey to the full hue (at half
+ *  lightness the chroma is the saturation). A grey keeps `fallbackHue`. */
+export function rgbToTint(rgb: readonly [number, number, number], fallbackHue: number): { hue: number; saturation: number } {
+  const [r, g, b] = rgb;
+  const max = Math.max(r, g, b);
+  const chroma = max - Math.min(r, g, b);
+  const saturation = Math.min(Math.max(chroma * 100, 0), 100);
+  if (chroma === 0) return { hue: fallbackHue, saturation: 0 };
+  const sector = max === r ? ((g - b) / chroma + 6) % 6 : max === g ? (b - r) / chroma + 2 : (r - g) / chroma + 4;
+  return { hue: Math.min(Math.max(sector * 60, 0), 360), saturation };
+}
+
 /** commit_params: the filter's colour (inverted for a negative density) and its complement. */
 export function filterColours(d: DarktableParams): { color: Rgb; color1: Rgb } {
   let color = hslToRgb(d.hue, d.saturation, 0.5);
@@ -147,16 +170,23 @@ export function gradientLength(d: DarktableParams, aspect: number, u: number, v:
   return (Math.sin(a) * u - Math.cos(a) * v - 1 + offset) * filterHardness(d.hardness, aspect);
 }
 
-const clip = (x: number): number => (x >= 0 ? (x <= 1 ? x : 1) : 0);
+/** The dense side's share of the density at `length`: a smoothstep across
+ *  ±0.75, darktable's ±0.5 widened by the 1.5 that keeps its slope of 1
+ *  through the line. 0 on the clear side, 1 on the dense side. */
+export function rampWeight(length: number): number {
+  const x = Math.min(Math.max(0.5 + length / 1.5, 0), 1);
+  return x * x * (3 - 2 * x);
+}
 
-/** What the filter multiplies each channel by at `length`. */
-export function filterGain(density: number, colours: { color: Rgb; color1: Rgb }, length: number): Rgb {
+/** What the filter multiplies each channel by where the dense side's share
+ *  of the density is `weight` (rampWeight, or darktable's clip(0.5 + length)). */
+export function filterGain(density: number, colours: { color: Rgb; color1: Rgb }, weight: number): Rgb {
   const { color, color1 } = colours;
   if (density > 0) {
-    const dens = 2 ** (density * clip(0.5 + length));
+    const dens = 2 ** (density * weight);
     return [0, 1, 2].map((c) => 1 / (color[c] + color1[c] * dens)) as Rgb;
   }
-  const dens = 2 ** (-density * clip(0.5 - length));
+  const dens = 2 ** (-density * (1 - weight));
   return [0, 1, 2].map((c) => color[c] + color1[c] * dens) as Rgb;
 }
 
@@ -196,7 +226,7 @@ export const apply3 = (m: readonly number[], v: readonly number[]): Rgb => [
 export function filterPixel(p: Params, aspect: number, u: number, v: number, lin: Rgb): Rgb {
   if (!p.on) return lin;
   const d = toDarktable(p);
-  const gain = filterGain(d.density, filterColours(d), gradientLength(d, aspect, u, v));
+  const gain = filterGain(d.density, filterColours(d), rampWeight(gradientLength(d, aspect, u, v)));
   if (d.saturation === 0) return [lin[0] * gain[0], lin[1] * gain[1], lin[2] * gain[2]];
   const wide = apply3(REC709_TO_REC2020, lin);
   return apply3(REC2020_TO_REC709, [wide[0] * gain[0], wide[1] * gain[1], wide[2] * gain[2]]);

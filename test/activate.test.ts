@@ -30,10 +30,10 @@ describe("activate", () => {
     for (const id of [STAGE_ID, MASK_STAGE_ID, PANEL_ID, OVERLAY_ID, ROTATE_CURSOR.id]) expect(id.startsWith(`${manifest.id}.`)).toBe(true);
   });
 
-  // The tone anchor opened in 3.2.5; the panel's ownsBag came in 3.2.6.
+  // The tone anchor opened in 3.2.5, the panel's ownsBag in 3.2.6, framePoint in 3.2.7.
   it("keeps the manifest and package versions in step, and needs the core its API calls came in", () => {
     expect(pkg.version).toBe(manifest.version);
-    expect(manifest.minAppVersion).toBe("3.2.6");
+    expect(manifest.minAppVersion).toBe("3.2.8");
     expect(pkg.keywords).toContain("safelight-extension");
   });
 

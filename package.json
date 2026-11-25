@@ -1,7 +1,7 @@
 {
   "name": "safelight-graduated-density",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Graduated Density extension for Safelight: an optical graduated neutral density filter, neutral or tinted, placed with a line on the photo.",
   "type": "module",
   "scripts": {

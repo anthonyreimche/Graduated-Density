@@ -1,6 +1,6 @@
 // The panel, in the order of the module it ports: the switch, Density,
 // Hardness, Rotation, then the offset darktable sets only on the canvas, the
-// tint's Hue and Saturation, the module's presets, and the button that puts
+// tint's colour field and its Hue and Saturation, the module's presets, and the button that puts
 // the line on the photo. Hue shows in degrees and Saturation in percent, as
 // darktable shows them.
 //
@@ -13,8 +13,8 @@
 // puts the line on the photo.
 
 import { scopeTarget, type Target } from "./edit";
-import { DEFAULT_PARAMS, PRESETS, RANGES, type NumericKey, type Params } from "./model";
-import { LABELS } from "./params";
+import { DEFAULT_PARAMS, PRESETS, RANGES, rgbToTint, tintToRgb, type NumericKey, type Params } from "./model";
+import { LABELS, MASK_STAGE_ID, STAGE_ID, qualified } from "./params";
 import { React, api } from "./rt";
 import { store } from "./store";
 
@@ -34,11 +34,17 @@ export const HUE_TRACK = `linear-gradient(to right, ${[0, 60, 120, 180, 240, 300
 /** The Saturation slider's track: dark grey to the hue at full strength. */
 export const saturationTrack = (hue: number): string => `linear-gradient(to right, rgb(51, 51, 51), hsl(${hue}, 100%, 50%))`;
 
+const TINT_TIP = "The colour of the filter's tint. Click for the picker, or the eyedropper to take the colour from the photo; Hue and Saturation below fine-tune it";
+
+/** The eyedropper samples the photo with every filter off, the photo's and
+ *  the masks', so the pick is the colour the filter receives. */
+const PICK = { paramBag: { [qualified(STAGE_ID, "on")]: false, [qualified(MASK_STAGE_ID, "on")]: false } };
+
 const SHOWS_LINE: ReadonlySet<keyof Params> = new Set(["rotation", "offset"]);
 
 export function GraduatedPanel() {
   const { Slider } = api.components;
-  const { Button, Select, Stack, Toggle } = api.ui;
+  const { Button, ColourField, Select, Stack, Toggle } = api.ui;
   const scope = api.develop.useParamScope();
   const target: Target = scopeTarget(scope);
   const p = target.read();
@@ -68,6 +74,14 @@ export function GraduatedPanel() {
     const now = target.read();
     target.write({ ...now, [key]: Math.min(Math.max(v, RANGES[key].min), RANGES[key].max), on: true }, [key, "on"]);
     take(!now.on || SHOWS_LINE.has(key));
+  };
+
+  const changeTint = (v: { hue: number; saturation?: number }) => {
+    const now = target.read();
+    const hue = Math.min(Math.max(v.hue, RANGES.hue.min), RANGES.hue.max);
+    const saturation = Math.min(Math.max(v.saturation ?? now.saturation, RANGES.saturation.min), RANGES.saturation.max);
+    target.write({ ...now, hue, saturation, on: true }, ["hue", "saturation", "on"]);
+    take(!now.on);
   };
 
   const slider = (key: NumericKey, track?: string) => {
@@ -106,6 +120,17 @@ export function GraduatedPanel() {
       {slider("hardness")}
       {slider("rotation")}
       {slider("offset")}
+      <ColourField
+        label="Tint"
+        title={TINT_TIP}
+        hue={p.hue}
+        saturation={p.saturation}
+        toRgb={(h, s) => tintToRgb(h, s)}
+        fromRgb={(rgb) => ({ ...rgbToTint(rgb, target.read().hue), lightness: 50 })}
+        pick={PICK}
+        onChange={changeTint}
+        onCommit={() => target.commit("tint")}
+      />
       {slider("hue", HUE_TRACK)}
       {slider("saturation", saturationTrack(p.hue))}
       <Select

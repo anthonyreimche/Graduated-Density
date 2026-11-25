@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { activate, deactivate } from "../src/index";
 import { DEFAULT_PARAMS, PRESETS } from "../src/model";
 import { GraduatedPanel, HUE_TRACK } from "../src/Panel";
-import { STAGE_ID, bagPatch, readParams } from "../src/params";
+import { MASK_STAGE_ID, STAGE_ID, bagPatch, readParams } from "../src/params";
 import { React } from "../src/rt";
 import { store } from "../src/store";
 import { fakeApi } from "./support/fake-api";
@@ -41,6 +41,37 @@ describe("GraduatedPanel", () => {
       ["Saturation", 0],
     ]);
     expect(view.getByLabelText("Enabled")).not.toBeNull();
+  });
+
+  it("offers a Tint colour field above Hue and Saturation, showing the filter's tint", () => {
+    const { rig, view } = setup(bagPatch({ ...DEFAULT_PARAMS, on: true, hue: 120, saturation: 40 }, STAGE_ID));
+    const [field] = rig.colourFields(view.container);
+    expect(field).toMatchObject({ label: "Tint", hue: 120, saturation: 40 });
+    expect(field.lightness).toBeUndefined();
+    expect(field.title).toBeTruthy();
+    expect(field.toRgb?.(120, 100, 50)).toEqual([0, 1, 0]);
+    expect(field.fromRgb?.([0, 1, 0])).toMatchObject({ hue: 120, saturation: 100 });
+    const swatch = view.container.querySelector("[data-colour-field]");
+    const hueSlider = [...view.container.querySelectorAll("[data-slider]")].find((el) => el.textContent?.startsWith("Hue"));
+    const order = swatch && hueSlider ? swatch.compareDocumentPosition(hueSlider) : 0;
+    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(rig.sliders(view.container).map((s) => s.label)).toContain("Hue");
+  });
+
+  it("writes a tint drag live, switches the filter on, and commits it once", () => {
+    const { rig, view, params } = setup();
+    const field = () => rig.colourFields(view.container)[0];
+    act(() => field().onChange({ hue: 200, saturation: 30 }));
+    act(() => field().onChange({ hue: 210, saturation: 35 }));
+    expect(params()).toMatchObject({ on: true, hue: 210, saturation: 35 });
+    expect(rig.commits).toEqual([]);
+    act(() => field().onCommit?.());
+    expect(rig.commits).toEqual(["Graduated Density: tint"]);
+  });
+
+  it("samples the photo with the filter off, so the pick is the colour it receives", () => {
+    const { rig, view } = setup();
+    expect(rig.colourFields(view.container)[0].pick).toEqual({ paramBag: { [`${STAGE_ID}.on`]: false, [`${MASK_STAGE_ID}.on`]: false } });
   });
 
   it("explains each control in a tooltip", () => {

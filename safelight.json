@@ -1,7 +1,7 @@
 {
   "id": "graduated-density",
   "name": "Graduated Density",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "An optical graduated neutral density filter: darken (or brighten) one side of the photo with a soft or hard transition, neutral or tinted. Drag the line on the photo to move and turn it. Works before the tone mapping, the way a filter on the lens does, and inside masks.",
   "author": "Anthony Reimche",
   "main": "dist/index.js",
@@ -9,5 +9,5 @@
   "categories": ["tone"],
   "keywords": ["graduated filter", "graduated neutral density", "gnd", "nd filter", "sky", "gradient", "tint", "scene-referred"],
   "repository": "anthonyreimche/Graduated-Density",
-  "minAppVersion": "3.2.6"
+  "minAppVersion": "3.2.8"
 }

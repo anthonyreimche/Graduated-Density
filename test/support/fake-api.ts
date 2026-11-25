@@ -13,6 +13,7 @@ import * as React from "react";
 import { create } from "zustand";
 import type {
   ButtonProps,
+  ColourFieldProps,
   CursorContribution,
   DevelopOverlayState,
   Mask,
@@ -56,6 +57,8 @@ export interface Rig {
   /** Undo steps, in order. */
   commits: string[];
   sliders(root: ParentNode): SliderProps[];
+  /** The props each ColourField in `root` was last drawn with. */
+  colourFields(root: ParentNode): ColourFieldProps[];
   /** Replaces the bag from outside, as an undo or a preset would. */
   replace(bag: Record<string, unknown>): void;
   /** The photo's masks, and a way to replace them from outside. */
@@ -70,6 +73,8 @@ export interface Rig {
   /** Lays out the canvas with the image at `rect` (null: not yet); `visible`
    *  is the part of the view the image shows in, when zoomed in (default: all of it). */
   setImageRect(rect: Rect | null, imageAspect?: number, visible?: Rect): void;
+  /** The Interface-scale zoom framePoint takes out of a pointer. */
+  setFrameZoom(zoom: number): void;
 }
 
 export function fakeApi(initial: Record<string, unknown> = {}): Rig {
@@ -80,7 +85,10 @@ export function fakeApi(initial: Record<string, unknown> = {}): Rig {
   const unregistered: string[] = [];
   const commits: string[] = [];
   const sliderProps = new Map<number, SliderProps>();
+  const colourProps = new Map<number, ColourFieldProps>();
   let nextSlider = 0;
+  let nextColour = 0;
+  let frameZoom = 1;
 
   const develop = create<FakeDevelop>()((set) => ({
     photoId: "photo-1",
@@ -147,6 +155,7 @@ export function fakeApi(initial: Record<string, unknown> = {}): Rig {
         radiusToImage: null,
         region: null,
         imageAspect: aspect,
+        zoomScale: 1,
       };
     }
     return {
@@ -159,6 +168,7 @@ export function fakeApi(initial: Record<string, unknown> = {}): Rig {
       radiusToImage: (px) => px / rect.h,
       region: { x: 0, y: 0, width: 1, height: 1 },
       imageAspect: aspect,
+      zoomScale: 1,
     };
   }
 
@@ -166,6 +176,14 @@ export function fakeApi(initial: Record<string, unknown> = {}): Rig {
     const id = React.useRef(nextSlider++).current;
     sliderProps.set(id, props);
     return React.createElement("div", { "data-slider": id }, `${props.label} ${props.value}`);
+  }
+
+  // Core's ColourField is a stand-in that keeps the props it was last drawn
+  // with, so a test can call onChange and onCommit and read pick.
+  function ColourField(props: ColourFieldProps) {
+    const id = React.useRef(nextColour++).current;
+    colourProps.set(id, props);
+    return React.createElement("div", { "data-colour-field": id, title: props.title }, `${props.label} ${props.hue} ${props.saturation}`);
   }
 
   const escapeTakers: (() => void)[] = [];
@@ -184,6 +202,7 @@ export function fakeApi(initial: Record<string, unknown> = {}): Rig {
         e("option", { value: "" }, props.placeholder ?? ""),
         ...(props.options ?? []).map((o) => e("option", { key: o.value, value: o.value }, o.label)),
       ),
+    ColourField,
     Stack: ({ children, style }: StackProps) => e("div", { style }, children),
     Toggle: (props: ToggleProps) =>
       e(
@@ -215,7 +234,14 @@ export function fakeApi(initial: Record<string, unknown> = {}): Rig {
     registerCursor: (c: CursorContribution) => void cursors.push(c),
     components: { Slider },
     cursors: { resolve: (token: string) => token },
-    develop: { useDevelopOverlay, useParamScope },
+    develop: {
+      useDevelopOverlay,
+      useParamScope,
+      framePoint: (el: Element, clientX: number, clientY: number) => {
+        const r = el.getBoundingClientRect();
+        return { x: (clientX - r.left) / frameZoom, y: (clientY - r.top) / frameZoom };
+      },
+    },
     ui,
     stores: { create, useDevelopStore: develop },
   };
@@ -240,12 +266,21 @@ export function fakeApi(initial: Record<string, unknown> = {}): Rig {
       top?.();
       return top !== undefined;
     },
+    setFrameZoom: (zoom) => {
+      frameZoom = zoom;
+    },
     setImageRect: (rect, aspect = 1.5, visible) =>
       layout.setState((s) => ({ rect, aspect, visible: visible ?? null, nonce: s.nonce + 1 })),
     sliders: (root) =>
       [...root.querySelectorAll("[data-slider]")].map((el) => {
         const props = sliderProps.get(Number(el.getAttribute("data-slider")));
         if (!props) throw new Error("a slider without props");
+        return props;
+      }),
+    colourFields: (root) =>
+      [...root.querySelectorAll("[data-colour-field]")].map((el) => {
+        const props = colourProps.get(Number(el.getAttribute("data-colour-field")));
+        if (!props) throw new Error("a colour field without props");
         return props;
       }),
   };

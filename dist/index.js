@@ -65,7 +65,38 @@ function c(e) {
 		saturation: e.saturation * 100
 	};
 }
-var l = [
+function l(e, t, n) {
+	return n < 1 ? e + (t - e) * n : n < 3 ? t : n < 4 ? e + (t - e) * (4 - n) : e;
+}
+function u(e, t, n) {
+	if (t === 0) return [
+		n,
+		n,
+		n
+	];
+	let r = n < .5 ? n * (1 + t) : n + t - n * t, i = 2 * n - r, a = e * 6;
+	return [
+		l(i, r, a < 4 ? a + 2 : a - 4),
+		l(i, r, a),
+		l(i, r, a > 2 ? a - 2 : a + 4)
+	];
+}
+function d(e, t) {
+	return u(e / 360, t / 100, .5);
+}
+function f(e, t) {
+	let [n, r, i] = e, a = Math.max(n, r, i), o = a - Math.min(n, r, i), s = Math.min(Math.max(o * 100, 0), 100);
+	if (o === 0) return {
+		hue: t,
+		saturation: 0
+	};
+	let c = a === n ? ((r - i) / o + 6) % 6 : a === r ? (i - n) / o + 2 : (n - r) / o + 4;
+	return {
+		hue: Math.min(Math.max(c * 60, 0), 360),
+		saturation: s
+	};
+}
+var p = [
 	.627403895934699,
 	.329283038377884,
 	.043313065687417,
@@ -76,7 +107,7 @@ var l = [
 	.088013307877226,
 	.895595253247624
 ];
-function u(e) {
+function m(e) {
 	let [t, n, r, i, a, o, s, c, l] = e, u = a * l - o * c, d = -(i * l - o * s), f = i * c - a * s, p = t * u + n * d + r * f;
 	return [
 		u / p,
@@ -90,8 +121,8 @@ function u(e) {
 		(t * a - n * i) / p
 	];
 }
-var d = u(l);
-function f(e, t, n) {
+var h = m(p);
+function g(e, t, n) {
 	let r = c({
 		density: 1,
 		hardness: 0,
@@ -111,58 +142,58 @@ function f(e, t, n) {
 		}
 	};
 }
-var p = [
-	f("nd2-soft", "Neutral grey ND2 (soft)", { density: 1 }),
-	f("nd4-soft", "Neutral grey ND4 (soft)", { density: 2 }),
-	f("nd8-soft", "Neutral grey ND8 (soft)", { density: 3 }),
-	f("nd2-hard", "Neutral grey ND2 (hard)", {
+var _ = [
+	g("nd2-soft", "Neutral grey ND2 (soft)", { density: 1 }),
+	g("nd4-soft", "Neutral grey ND4 (soft)", { density: 2 }),
+	g("nd8-soft", "Neutral grey ND8 (soft)", { density: 3 }),
+	g("nd2-hard", "Neutral grey ND2 (hard)", {
 		density: 1,
 		hardness: 75
 	}),
-	f("nd4-hard", "Neutral grey ND4 (hard)", {
+	g("nd4-hard", "Neutral grey ND4 (hard)", {
 		density: 2,
 		hardness: 75
 	}),
-	f("nd8-hard", "Neutral grey ND8 (hard)", {
+	g("nd8-hard", "Neutral grey ND8 (hard)", {
 		density: 3,
 		hardness: 75
 	}),
-	f("orange-nd2", "Orange ND2 (soft)", {
+	g("orange-nd2", "Orange ND2 (soft)", {
 		density: 1,
 		hue: .102439,
 		saturation: .8
 	}),
-	f("yellow-nd2", "Yellow ND2 (soft)", {
+	g("yellow-nd2", "Yellow ND2 (soft)", {
 		density: 1,
 		hue: .15122,
 		saturation: .5
 	}),
-	f("purple-nd2", "Purple ND2 (soft)", {
+	g("purple-nd2", "Purple ND2 (soft)", {
 		density: 1,
 		hue: .82439,
 		saturation: .5
 	}),
-	f("green-nd2", "Green ND2 (soft)", {
+	g("green-nd2", "Green ND2 (soft)", {
 		density: 1,
 		hue: .302439,
 		saturation: .5
 	}),
-	f("red-nd2", "Red ND2 (soft)", {
+	g("red-nd2", "Red ND2 (soft)", {
 		density: 1,
 		hue: 0,
 		saturation: .5
 	}),
-	f("blue-nd2", "Blue ND2 (soft)", {
+	g("blue-nd2", "Blue ND2 (soft)", {
 		density: 1,
 		hue: .663415,
 		saturation: .5
 	}),
-	f("brown-nd4", "Brown ND4 (soft)", {
+	g("brown-nd4", "Brown ND4 (soft)", {
 		density: 2,
 		hue: .082927,
 		saturation: .25
 	})
-], m = "graduated-density", h = `${m}.filter`, g = `${m}.local`, _ = `${m}.panel`, v = `${m}.line`, y = [
+], v = "graduated-density", y = `${v}.filter`, b = `${v}.local`, x = `${v}.panel`, S = `${v}.line`, C = [
 	"on",
 	"density",
 	"hardness",
@@ -170,14 +201,14 @@ var p = [
 	"offset",
 	"hue",
 	"saturation"
-], b = [
+], w = [
 	"density",
 	"hardness",
 	"rotation",
 	"offset",
 	"hue",
 	"saturation"
-], x = {
+], T = {
 	on: "Enabled",
 	density: "Density",
 	hardness: "Hardness",
@@ -185,32 +216,32 @@ var p = [
 	offset: "Offset",
 	hue: "Hue",
 	saturation: "Saturation"
-}, S = (e, t) => `${e}.${t}`, C = (e) => y.map((t) => S(e, t)), w = (e) => typeof e == "number" && Number.isFinite(e);
-function T(e, t) {
-	let n = { ...r }, a = e[S(t, "on")];
-	typeof a == "boolean" ? n.on = a : w(a) && (n.on = a >= .5);
-	for (let r of b) {
-		let a = e[S(t, r)];
-		w(a) && (n[r] = Math.min(Math.max(a, i[r].min), i[r].max));
+}, E = (e, t) => `${e}.${t}`, D = (e) => C.map((t) => E(e, t)), O = (e) => typeof e == "number" && Number.isFinite(e);
+function k(e, t) {
+	let n = { ...r }, a = e[E(t, "on")];
+	typeof a == "boolean" ? n.on = a : O(a) && (n.on = a >= .5);
+	for (let r of w) {
+		let a = e[E(t, r)];
+		O(a) && (n[r] = Math.min(Math.max(a, i[r].min), i[r].max));
 	}
 	return n;
 }
-function E(e, t, n = y) {
+function A(e, t, n = C) {
 	let r = {};
-	for (let i of n) r[S(t, i)] = e[i];
+	for (let i of n) r[E(t, i)] = e[i];
 	return r;
 }
 //#endregion
 //#region src/rt.ts
-var D, O;
-function k(e) {
-	O = e, D = e.react;
+var j, M;
+function N(e) {
+	M = e, j = e.react;
 }
 //#endregion
 //#region src/store.ts
-var A = null;
-function j() {
-	A = O.stores.create()((e) => ({
+var P = null;
+function F() {
+	P = M.stores.create()((e) => ({
 		panels: 0,
 		editing: !1,
 		scope: null,
@@ -226,36 +257,36 @@ function j() {
 		leaveMask: (t) => e((e) => e.scope?.maskId === t ? { scope: null } : {})
 	}));
 }
-function M() {
-	if (!A) throw Error("Graduated Density's store is used before activate()");
-	return A;
+function I() {
+	if (!P) throw Error("Graduated Density's store is used before activate()");
+	return P;
 }
 //#endregion
 //#region src/edit.ts
-var N = "Graduated Density", P = (e) => `${N}: ${e}`, F = {
-	stage: h,
-	read: () => T(O.stores.useDevelopStore.getState().paramBag, h),
-	write: (e, t) => O.stores.useDevelopStore.getState().setDynParams(E(e, h, t)),
-	commit: (e) => void O.stores.useDevelopStore.getState().commitEdit(P(e))
+var L = "Graduated Density", R = (e) => `${L}: ${e}`, z = {
+	stage: y,
+	read: () => k(M.stores.useDevelopStore.getState().paramBag, y),
+	write: (e, t) => M.stores.useDevelopStore.getState().setDynParams(A(e, y, t)),
+	commit: (e) => void M.stores.useDevelopStore.getState().commitEdit(R(e))
 };
-function I(e) {
-	let t = e.maskId === null ? h : g;
+function B(e) {
+	let t = e.maskId === null ? y : b;
 	return {
 		stage: t,
-		read: () => T(e.getParams(), t),
-		write: (n, r) => e.setParams(E(n, t, r)),
-		commit: (t) => e.commit(P(t))
+		read: () => k(e.getParams(), t),
+		write: (n, r) => e.setParams(A(n, t, r)),
+		commit: (t) => e.commit(R(t))
 	};
 }
 function ee() {
-	let e = M().getState().scope;
-	return e ? I(e) : F;
+	let e = I().getState().scope;
+	return e ? B(e) : z;
 }
 //#endregion
 //#region src/line.ts
-var L = (e) => e * Math.PI / 180;
-function te(e, t) {
-	let n = L(-e), r = Math.sin(n);
+var V = (e) => e * Math.PI / 180;
+function H(e, t) {
+	let n = V(-e), r = Math.sin(n);
 	if (Math.abs(r) < 1e-9) return e === 0 ? [{
 		x: .1,
 		y: t / 100
@@ -293,25 +324,25 @@ function te(e, t) {
 	};
 	return e < 90 && e > -90 ? a < o ? [d, f] : [f, d] : o < a ? [d, f] : [f, d];
 }
-var R = 1e-4;
-function z(e, t) {
+var te = 1e-4;
+function ne(e, t) {
 	let n = t.x - e.x;
-	return n > R || n < -1e-4 ? Math.atan2(t.y - e.y, n) : t.y - e.y <= 0 ? -Math.PI / 2 : Math.PI / 2;
+	return n > te || n < -1e-4 ? Math.atan2(t.y - e.y, n) : t.y - e.y <= 0 ? -Math.PI / 2 : Math.PI / 2;
 }
-function B(e, t) {
-	let n = L(-e), r = Math.sin(n), i = Math.cos(n);
+function U(e, t) {
+	let n = V(-e), r = Math.sin(n), i = Math.cos(n);
 	return (-2 * r * t.x + r - i + 1 + 2 * i * t.y) * 50;
 }
-function V(e, t) {
-	let n = -z(e, t) / Math.PI * 180;
+function W(e, t) {
+	let n = -ne(e, t) / Math.PI * 180;
 	return {
 		rotation: n,
-		offset: B(n, e)
+		offset: U(n, e)
 	};
 }
 //#endregion
 //#region src/screen.ts
-function ne(e, t, n) {
+function re(e, t, n) {
 	let r = t.x - e.x, i = t.y - e.y;
 	if (r === 0 && i === 0) return null;
 	let a = -Infinity, o = Infinity, s = (e, t) => {
@@ -329,8 +360,8 @@ function ne(e, t, n) {
 		y: e.y + i * l
 	}];
 }
-var H = (e, t) => e.x >= t.x && e.x <= t.x + t.w && e.y >= t.y && e.y <= t.y + t.h;
-function re(e, t, n, r, i) {
+var G = (e, t) => e.x >= t.x && e.x <= t.x + t.w && e.y >= t.y && e.y <= t.y + t.h;
+function ie(e, t, n, r, i) {
 	let a = Math.hypot(n.x - t.x, n.y - t.y) || 1, o = (n.x - t.x) / a * i, s = (n.y - t.y) / a * i, c = {
 		x: e.x + r * o,
 		y: e.y + r * s
@@ -344,17 +375,10 @@ function re(e, t, n, r, i) {
 		}
 	];
 }
-function ie(e, t, n) {
-	let r = n.getBoundingClientRect(), i = n.offsetWidth > 0 && r.width > 0 ? r.width / n.offsetWidth : 1;
-	return {
-		x: (e - r.left) / i,
-		y: (t - r.top) / i
-	};
-}
 //#endregion
 //#region src/Overlay.tsx
 var ae = 9, oe = 10;
-function U(e, t, n) {
+function K(e, t, n) {
 	if (e.part === "line") {
 		let r = {
 			x: t.x - e.start.x,
@@ -369,13 +393,13 @@ function U(e, t, n) {
 		return {
 			patch: {
 				rotation: n.rotation,
-				offset: o(a("offset", B(-n.rotation, i)))
+				offset: o(a("offset", U(-n.rotation, i)))
 			},
 			a: i,
 			b: s
 		};
 	}
-	let r = e.part === "a" ? t : e.a, i = e.part === "b" ? t : e.b, s = V(r, i);
+	let r = e.part === "a" ? t : e.a, i = e.part === "b" ? t : e.b, s = W(r, i);
 	return {
 		patch: {
 			rotation: o(a("rotation", s.rotation === 0 ? 0 : -s.rotation)),
@@ -385,19 +409,19 @@ function U(e, t, n) {
 		b: i
 	};
 }
-function W(e, t, n, r) {
+function se(e, t, n, r) {
 	let i = r(e.x, e.y), a = r(t.x, t.y);
-	return H(i, n) && H(a, n) ? [i, a] : ne(i, a, n);
+	return G(i, n) && G(a, n) ? [i, a] : re(i, a, n);
 }
-var G = (e, t, n) => {
+var ce = (e, t, n) => {
 	if (e.stage !== t) return !1;
-	let r = V(e.a, e.b);
+	let r = W(e.a, e.b);
 	return Math.abs((r.rotation + n.rotation + 540) % 360 - 180) <= .005 + 1e-9 && Math.abs(r.offset - n.offset) <= .005 + 1e-9;
 };
-function K() {
-	let e = O.develop.useDevelopOverlay();
-	O.stores.useDevelopStore((e) => e.paramBag), O.stores.useDevelopStore((e) => e.params.masks), M()((e) => e.scope);
-	let n = O.stores.useDevelopStore((e) => e.photoId), r = M()((e) => e.panels), i = M()((e) => e.editing), a = D.useRef(null), o = D.useRef(null), c = D.useRef(null), [l, u] = D.useState(null), [d, f] = D.useState(null), p = ee(), m = p.read(), h = i && r > 0 && m.on, { rect: g, toScreen: _, toImage: v } = e, y = c.current && G(c.current, p.stage, m) ? c.current : null, [b, x] = l ? [l.a, l.b] : y ? [y.a, y.b] : te(s(m).rotation, m.offset), S = h && n && g && _ && v ? W(b, x, g, _) : null, C = () => {
+function le() {
+	let e = M.develop.useDevelopOverlay();
+	M.stores.useDevelopStore((e) => e.paramBag), M.stores.useDevelopStore((e) => e.params.masks), I()((e) => e.scope);
+	let n = M.stores.useDevelopStore((e) => e.photoId), r = I()((e) => e.panels), i = I()((e) => e.editing), a = j.useRef(null), o = j.useRef(null), c = j.useRef(null), [l, u] = j.useState(null), [d, f] = j.useState(null), p = ee(), m = p.read(), h = i && r > 0 && m.on, { rect: g, toScreen: _, toImage: v } = e, y = c.current && ce(c.current, p.stage, m) ? c.current : null, [b, x] = l ? [l.a, l.b] : y ? [y.a, y.b] : H(s(m).rotation, m.offset), S = h && n && g && _ && v ? se(b, x, g, _) : null, C = () => {
 		let e = o.current;
 		e && (o.current = null, e.last && (c.current = {
 			stage: e.target.stage,
@@ -405,20 +429,20 @@ function K() {
 			b: e.last.b
 		}), u(null), e.last && e.target.commit(e.part === "line" ? "move line" : "turn line"));
 	};
-	D.useEffect(() => {
+	j.useEffect(() => {
 		o.current = null, c.current = null, u(null);
 	}, [n]);
 	let w = S !== null;
-	if (D.useEffect(() => {
+	if (j.useEffect(() => {
 		w || C();
-	}, [w]), D.useEffect(() => () => C(), []), D.useEffect(() => h ? O.ui.onEscape(() => M().getState().edit(!1)) : void 0, [h]), !S || !v) return null;
-	let [T, E] = S, k = (e) => {
+	}, [w]), j.useEffect(() => () => C(), []), j.useEffect(() => h ? M.ui.onEscape(() => I().getState().edit(!1)) : void 0, [h]), !S || !v) return null;
+	let [T, E] = S, D = (e) => {
 		if (!a.current) return null;
-		let t = ie(e.clientX, e.clientY, a.current);
+		let t = M.develop.framePoint(a.current, e.clientX, e.clientY);
 		return v(t.x, t.y);
-	}, A = (e) => (t) => {
+	}, O = (e) => (t) => {
 		if (t.button !== 0) return;
-		let n = k(t);
+		let n = D(t);
 		n && (t.preventDefault(), t.stopPropagation(), t.currentTarget.setPointerCapture(t.pointerId), o.current = {
 			part: e,
 			pointerId: t.pointerId,
@@ -428,12 +452,12 @@ function K() {
 			target: p,
 			last: null
 		});
-	}, j = (e) => {
+	}, k = (e) => {
 		let t = o.current;
 		if (!t || t.pointerId !== e.pointerId || e.buttons === 0) return;
-		let n = k(e);
+		let n = D(e);
 		if (!n || !t.last && n.x === t.start.x && n.y === t.start.y) return;
-		let r = t.target.read(), i = U(t, n, r);
+		let r = t.target.read(), i = K(t, n, r);
 		t.last = {
 			a: i.a,
 			b: i.b
@@ -446,20 +470,20 @@ function K() {
 			"offset",
 			"on"
 		]);
-	}, N = (e) => {
+	}, A = (e) => {
 		let t = o.current;
 		t && t.pointerId === e.pointerId && (e.currentTarget.hasPointerCapture(e.pointerId) && e.currentTarget.releasePointerCapture(e.pointerId), C());
-	}, P = o.current?.part ?? null, F = (e) => P ? P === e : d === e, I = F("line"), L = (e) => ({
-		onPointerDown: A(e),
-		onPointerMove: j,
-		onPointerUp: N,
-		onPointerCancel: N,
-		onLostPointerCapture: N,
+	}, N = o.current?.part ?? null, P = (e) => N ? N === e : d === e, F = P("line"), L = (e) => ({
+		onPointerDown: O(e),
+		onPointerMove: k,
+		onPointerUp: A,
+		onPointerCancel: A,
+		onLostPointerCapture: A,
 		onPointerEnter: () => f(e),
 		onPointerLeave: () => f((t) => t === e ? null : t)
 	}), R = (e) => {
-		let t = re(e === "a" ? T : E, T, E, e === "a" ? 1 : -1, ae), n = F(e);
-		return /* @__PURE__ */ D.createElement("polygon", {
+		let t = ie(e === "a" ? T : E, T, E, e === "a" ? 1 : -1, ae), n = P(e);
+		return /* @__PURE__ */ j.createElement("polygon", {
 			"data-gd-mark": e,
 			points: t.map((e) => `${e.x},${e.y}`).join(" "),
 			fill: `rgba(255,255,255,${n ? 1 : .5})`,
@@ -467,8 +491,8 @@ function K() {
 			strokeWidth: 1,
 			pointerEvents: "none"
 		});
-	}, z = O.cursors.resolve(t);
-	return /* @__PURE__ */ D.createElement("div", {
+	}, z = M.cursors.resolve(t);
+	return /* @__PURE__ */ j.createElement("div", {
 		ref: a,
 		style: {
 			position: "absolute",
@@ -476,7 +500,7 @@ function K() {
 			overflow: "hidden",
 			pointerEvents: "none"
 		}
-	}, /* @__PURE__ */ D.createElement("svg", {
+	}, /* @__PURE__ */ j.createElement("svg", {
 		width: "100%",
 		height: "100%",
 		style: {
@@ -484,25 +508,25 @@ function K() {
 			inset: 0,
 			overflow: "visible"
 		}
-	}, /* @__PURE__ */ D.createElement("line", {
+	}, /* @__PURE__ */ j.createElement("line", {
 		x1: T.x,
 		y1: T.y,
 		x2: E.x,
 		y2: E.y,
 		stroke: "rgba(0,0,0,0.8)",
-		strokeWidth: I ? 5 : 3,
+		strokeWidth: F ? 5 : 3,
 		strokeLinecap: "round",
 		pointerEvents: "none"
-	}), /* @__PURE__ */ D.createElement("line", {
+	}), /* @__PURE__ */ j.createElement("line", {
 		x1: T.x,
 		y1: T.y,
 		x2: E.x,
 		y2: E.y,
 		stroke: "rgba(255,255,255,0.8)",
-		strokeWidth: I ? 2 : 1,
+		strokeWidth: F ? 2 : 1,
 		strokeLinecap: "round",
 		pointerEvents: "none"
-	}), R("a"), R("b"), /* @__PURE__ */ D.createElement("line", {
+	}), R("a"), R("b"), /* @__PURE__ */ j.createElement("line", {
 		"data-gd-part": "line",
 		x1: T.x,
 		y1: T.y,
@@ -512,13 +536,13 @@ function K() {
 		strokeWidth: 20,
 		pointerEvents: "stroke",
 		style: {
-			cursor: O.cursors.resolve("crop-move"),
+			cursor: M.cursors.resolve("crop-move"),
 			touchAction: "none"
 		},
 		...L("line")
-	}, /* @__PURE__ */ D.createElement("title", null, "Drag to move the filter's line")), ["a", "b"].map((e) => {
+	}, /* @__PURE__ */ j.createElement("title", null, "Drag to move the filter's line")), ["a", "b"].map((e) => {
 		let t = e === "a" ? T : E;
-		return /* @__PURE__ */ D.createElement("circle", {
+		return /* @__PURE__ */ j.createElement("circle", {
 			key: e,
 			"data-gd-part": e,
 			cx: t.x,
@@ -531,7 +555,7 @@ function K() {
 				touchAction: "none"
 			},
 			...L(e)
-		}, /* @__PURE__ */ D.createElement("title", null, "Drag to turn the filter's line about its other end"));
+		}, /* @__PURE__ */ j.createElement("title", null, "Drag to turn the filter's line about its other end"));
 	})));
 }
 //#endregion
@@ -544,7 +568,7 @@ var q = {
 	offset: "Where the line crosses the frame, in percent: 50 runs through the centre. Drag the line on the photo to move it",
 	hue: "The colour of the filter's tint, in degrees",
 	saturation: "How strong the tint is, in percent: 0 is a neutral grey filter"
-}, se = `linear-gradient(to right, ${[
+}, ue = `linear-gradient(to right, ${[
 	0,
 	60,
 	120,
@@ -552,64 +576,92 @@ var q = {
 	240,
 	300,
 	360
-].map((e) => `hsl(${e}, 100%, 50%)`).join(", ")})`, ce = (e) => `linear-gradient(to right, rgb(51, 51, 51), hsl(${e}, 100%, 50%))`, le = /* @__PURE__ */ new Set(["rotation", "offset"]);
+].map((e) => `hsl(${e}, 100%, 50%)`).join(", ")})`, de = (e) => `linear-gradient(to right, rgb(51, 51, 51), hsl(${e}, 100%, 50%))`, fe = "The colour of the filter's tint. Click for the picker, or the eyedropper to take the colour from the photo; Hue and Saturation below fine-tune it", pe = { paramBag: {
+	[E(y, "on")]: !1,
+	[E(b, "on")]: !1
+} }, me = /* @__PURE__ */ new Set(["rotation", "offset"]);
 function J() {
-	let { Slider: e } = O.components, { Button: t, Select: n, Stack: a, Toggle: o } = O.ui, s = O.develop.useParamScope(), c = I(s), l = c.read(), u = s.maskId, d = M()((e) => (e.scope?.maskId ?? null) === u), f = M()((e) => e.editing) && d;
-	D.useEffect(() => (M().getState().panelShown(!0), () => M().getState().panelShown(!1)), []), D.useEffect(() => {
-		if (u !== null) return M().getState().editScope(s), () => M().getState().leaveMask(u);
-	}, [u]);
-	let m = (e) => {
-		d || M().getState().editScope(u === null ? null : s), e && M().getState().edit(!0);
-	}, h = (e, t) => {
-		let n = c.read();
-		c.write({
+	let { Slider: e } = M.components, { Button: t, ColourField: n, Select: a, Stack: o, Toggle: s } = M.ui, c = M.develop.useParamScope(), l = B(c), u = l.read(), p = c.maskId, m = I()((e) => (e.scope?.maskId ?? null) === p), h = I()((e) => e.editing) && m;
+	j.useEffect(() => (I().getState().panelShown(!0), () => I().getState().panelShown(!1)), []), j.useEffect(() => {
+		if (p !== null) return I().getState().editScope(c), () => I().getState().leaveMask(p);
+	}, [p]);
+	let g = (e) => {
+		m || I().getState().editScope(p === null ? null : c), e && I().getState().edit(!0);
+	}, v = (e, t) => {
+		let n = l.read();
+		l.write({
 			...n,
 			[e]: Math.min(Math.max(t, i[e].min), i[e].max),
 			on: !0
-		}, [e, "on"]), m(!n.on || le.has(e));
-	}, g = (t, n) => {
+		}, [e, "on"]), g(!n.on || me.has(e));
+	}, y = (e) => {
+		let t = l.read(), n = Math.min(Math.max(e.hue, i.hue.min), i.hue.max), r = Math.min(Math.max(e.saturation ?? t.saturation, i.saturation.min), i.saturation.max);
+		l.write({
+			...t,
+			hue: n,
+			saturation: r,
+			on: !0
+		}, [
+			"hue",
+			"saturation",
+			"on"
+		]), g(!t.on);
+	}, b = (t, n) => {
 		let a = i[t];
-		return /* @__PURE__ */ D.createElement("div", {
+		return /* @__PURE__ */ j.createElement("div", {
 			key: t,
 			title: q[t]
-		}, /* @__PURE__ */ D.createElement(e, {
-			label: x[t],
-			value: l[t],
+		}, /* @__PURE__ */ j.createElement(e, {
+			label: T[t],
+			value: u[t],
 			min: a.min,
 			max: a.max,
 			step: a.step,
 			defaultValue: r[t],
 			trackBackground: n,
-			onChange: (e) => h(t, e),
-			onCommit: () => c.commit(x[t].toLowerCase())
+			onChange: (e) => v(t, e),
+			onCommit: () => l.commit(T[t].toLowerCase())
 		}));
 	};
-	return /* @__PURE__ */ D.createElement(a, {
+	return /* @__PURE__ */ j.createElement(o, {
 		gap: 6,
 		style: { padding: 8 }
-	}, /* @__PURE__ */ D.createElement("div", { title: q.on }, /* @__PURE__ */ D.createElement(o, {
-		checked: l.on,
-		label: x.on,
+	}, /* @__PURE__ */ j.createElement("div", { title: q.on }, /* @__PURE__ */ j.createElement(s, {
+		checked: u.on,
+		label: T.on,
 		onChange: (e) => {
-			c.write({
-				...c.read(),
+			l.write({
+				...l.read(),
 				on: e
-			}, ["on"]), c.commit(e ? "on" : "off"), e && m(!0);
+			}, ["on"]), l.commit(e ? "on" : "off"), e && g(!0);
 		}
-	})), g("density"), g("hardness"), g("rotation"), g("offset"), g("hue", se), g("saturation", ce(l.hue)), /* @__PURE__ */ D.createElement(n, {
+	})), b("density"), b("hardness"), b("rotation"), b("offset"), /* @__PURE__ */ j.createElement(n, {
+		label: "Tint",
+		title: fe,
+		hue: u.hue,
+		saturation: u.saturation,
+		toRgb: (e, t) => d(e, t),
+		fromRgb: (e) => ({
+			...f(e, l.read().hue),
+			lightness: 50
+		}),
+		pick: pe,
+		onChange: y,
+		onCommit: () => l.commit("tint")
+	}), b("hue", ue), b("saturation", de(u.hue)), /* @__PURE__ */ j.createElement(a, {
 		value: "",
 		placeholder: "Presets",
 		ariaLabel: "Graduated Density presets",
 		title: "Neutral and tinted filters of one, two and three stops, soft or hard. The line stays where it is",
-		options: p.map((e) => ({
+		options: _.map((e) => ({
 			value: e.id,
 			label: e.label
 		})),
 		onChange: (e) => {
-			let t = p.find((t) => t.id === e);
+			let t = _.find((t) => t.id === e);
 			if (!t) return;
-			let n = c.read();
-			c.write({
+			let n = l.read();
+			l.write({
 				...n,
 				...t.params,
 				rotation: n.rotation,
@@ -621,22 +673,22 @@ function J() {
 				"hardness",
 				"hue",
 				"saturation"
-			]), c.commit(t.label), m(!n.on);
+			]), l.commit(t.label), g(!n.on);
 		}
-	}), /* @__PURE__ */ D.createElement(t, {
+	}), /* @__PURE__ */ j.createElement(t, {
 		size: "sm",
 		full: !0,
-		active: f,
-		disabled: !l.on,
-		title: f ? "Take the line off the photo (Esc)" : "Show the filter's line on the photo, to move and turn it",
+		active: h,
+		disabled: !u.on,
+		title: h ? "Take the line off the photo (Esc)" : "Show the filter's line on the photo, to move and turn it",
 		onClick: () => {
-			if (f) return M().getState().edit(!1);
-			m(!0);
+			if (h) return I().getState().edit(!1);
+			g(!0);
 		}
-	}, f ? "Done" : "Edit Line"));
+	}, h ? "Done" : "Edit Line"));
 }
-function ue(e) {
-	e.write({ ...r }, Object.keys(x)), e.commit("reset"), M().getState().edit(!1);
+function he(e) {
+	e.write({ ...r }, Object.keys(T)), e.commit("reset"), I().getState().edit(!1);
 }
 //#endregion
 //#region src/glsl.ts
@@ -651,7 +703,7 @@ function Y(e) {
 		2
 	].map((n) => e[n * 3 + t])).map((e) => e.toPrecision(17)).join(", ")})`;
 }
-var de = `
+var ge = `
 float gdChannel(float m1, float m2, float h6) {
   if (h6 < 1.0) return m1 + (m2 - m1) * h6;
   if (h6 < 3.0) return m2;
@@ -677,47 +729,47 @@ vec3 gdFilter(vec3 rgb, vec2 uv, float aspect, float gdEv, float gdHard, float g
     ? 1.0 / (tint + (1.0 - tint) * exp2(gdEv * clamp(0.5 + len, 0.0, 1.0)))
     : tint + (1.0 - tint) * exp2(-gdEv * clamp(0.5 - len, 0.0, 1.0));
   if (gdSatPct == 0.0) return rgb * gain;
-  const mat3 to2020 = ${Y(l)};
-  const mat3 to709 = ${Y(d)};
+  const mat3 to2020 = ${Y(p)};
+  const mat3 to709 = ${Y(h)};
   return to709 * (gain * (to2020 * rgb));
 }
-`, X = "if (on) {\n  lin = gdFilter(lin, srcUv, uImageAspect, density, hardness, rotation, offset, hue, saturation);\n}";
+`, _e = "if (on) {\n  lin = gdFilter(lin, srcUv, uImageAspect, density, hardness, rotation, offset, hue, saturation);\n}";
 //#endregion
 //#region src/stage.ts
-function fe() {
+function ve() {
 	return [{
 		key: "on",
 		glslType: "bool",
 		default: r.on,
-		label: x.on
-	}, ...b.map((e) => ({
+		label: T.on
+	}, ...w.map((e) => ({
 		key: e,
 		glslType: "float",
 		default: r[e],
 		range: { ...i[e] },
-		label: x[e]
+		label: T[e]
 	}))];
 }
-var Z = (e) => ({
+var X = (e) => ({
 	id: e,
-	glsl: X,
-	helpers: de,
-	uniforms: fe(),
+	glsl: _e,
+	helpers: ge,
+	uniforms: ve(),
 	dormantWhen: { on: !1 },
 	presetScope: "global"
 });
-function pe() {
+function Z() {
 	return {
-		...Z(h),
+		...X(y),
 		name: "Graduated Density",
 		phase: "scene-linear",
 		anchor: "tone",
 		priority: 5
 	};
 }
-function me() {
+function ye() {
 	return {
-		...Z(g),
+		...X(b),
 		name: "Graduated Density in masks",
 		phase: "scene-linear",
 		priority: 5,
@@ -725,16 +777,16 @@ function me() {
 	};
 }
 function Q() {
-	return [pe(), me()];
+	return [Z(), ye()];
 }
 //#endregion
 //#region src/index.tsx
 var $ = null;
-function he(e) {
-	k(e), j(), $ = e, e.registerCursor(n);
+function be(e) {
+	N(e), F(), $ = e, e.registerCursor(n);
 	for (let t of Q()) e.registerProcessingStage(t);
 	e.registerPanel({
-		id: _,
+		id: x,
 		title: "Graduated Density",
 		component: J,
 		defaultDock: {
@@ -742,19 +794,19 @@ function he(e) {
 			direction: "right",
 			width: 268
 		},
-		onReset: () => ue(F),
-		ownsBag: [`${h}.`],
+		onReset: () => he(z),
+		ownsBag: [`${y}.`],
 		mask: {
 			component: J,
-			owns: C(g)
+			owns: D(b)
 		}
 	}), e.registerSlot({
-		id: v,
+		id: S,
 		slot: "develop-canvas-overlay",
-		component: K
+		component: le
 	});
 }
-function ge() {
+function xe() {
 	let e = $;
 	if (e) {
 		$ = null;
@@ -766,6 +818,6 @@ function ge() {
 	}
 }
 //#endregion
-export { m as EXT_ID, _ as PANEL_ID, he as activate, ge as deactivate };
+export { v as EXT_ID, x as PANEL_ID, be as activate, xe as deactivate };
 
 //# sourceMappingURL=index.js.map

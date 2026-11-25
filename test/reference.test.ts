@@ -2,7 +2,8 @@
 // by `npm run reference` from graduatednd.c and colorspaces.h compiled with
 // gcc). The double build checks the transcription: it is the same code, so
 // only rounding may differ. The float build is darktable as it runs, so the
-// numbers agree to float precision.
+// numbers agree to float precision. The ramp is darktable's own here, straight
+// and clipped; the extension eases it (model.ts rampWeight, #293).
 
 import { describe, expect, it } from "vitest";
 import { gradFromPoints, offsetThrough, pointsFromGrad, type Point } from "../src/line";
@@ -33,6 +34,9 @@ interface Case {
 const CASES = fixtures.cases as Case[];
 const IMAGES = fixtures.images as [number, number, number, number, number, number][];
 
+/** darktable's ramp: the dense side's share of the density, CLIP(0.5 + length). */
+const darktableRamp = (len: number): number => Math.min(Math.max(0.5 + len, 0), 1);
+
 /** process() over a region, through the port: input as the harness makes it. */
 function processRegion(d: DarktableParams, [W, H, x0, y0, w, h]: (typeof IMAGES)[number]): number[] {
   const colours = filterColours(d);
@@ -41,7 +45,7 @@ function processRegion(d: DarktableParams, [W, H, x0, y0, w, h]: (typeof IMAGES)
     for (let x = 0; x < w; x++) {
       const k = y * w + x;
       const len = gradientLength(d, W / H, (2 * (x0 + x)) / W - 1, (2 * (y0 + y)) / H - 1);
-      const gain: Rgb = filterGain(d.density, colours, len);
+      const gain: Rgb = filterGain(d.density, colours, darktableRamp(len));
       for (let c = 0; c < 3; c++) out.push((0.1 + 0.08 * ((7 * k + 3 * c) % 11)) * gain[c]);
     }
   }
@@ -81,8 +85,8 @@ describe("process", () => {
   it("darkens the top half of an upright line, and leaves the bottom half", () => {
     const d: DarktableParams = { density: 2, hardness: 0, rotation: 0, offset: 50, hue: 0, saturation: 0 };
     const colours = filterColours(d);
-    const top = filterGain(2, colours, gradientLength(d, 1.5, 0, -1));
-    const bottom = filterGain(2, colours, gradientLength(d, 1.5, 0, 1));
+    const top = filterGain(2, colours, darktableRamp(gradientLength(d, 1.5, 0, -1)));
+    const bottom = filterGain(2, colours, darktableRamp(gradientLength(d, 1.5, 0, 1)));
     expect(top[0]).toBeLessThan(0.5);
     expect(bottom[0]).toBeGreaterThan(top[0]);
   });

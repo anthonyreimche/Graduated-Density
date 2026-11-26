@@ -795,6 +795,7 @@ function be(e) {
 			direction: "right",
 			width: 268
 		},
+		modules: ["develop"],
 		onReset: () => he(z),
 		ownsBag: [`${y}.`],
 		mask: {

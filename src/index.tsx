@@ -32,6 +32,7 @@ export function activate(api: SafelightAPI): void {
     title: "Graduated Density",
     component: GraduatedPanel,
     defaultDock: { module: "develop", direction: "right", width: 268 },
+    modules: ["develop"],
     onReset: () => resetGraduated(photoTarget),
     ownsBag: [`${STAGE_ID}.`],
     mask: { component: GraduatedPanel, owns: stageKeys(MASK_STAGE_ID) },
